@@ -114,8 +114,8 @@ const app = {
 
     createObserver: () => {
         const options = {
-            root: document.getElementById('mobile-container'), // Use container as root
-            threshold: 0.6 // 60% visibility
+            root: document.getElementById('mobile-container'),
+            threshold: 0.6
         };
 
         app.observer = new IntersectionObserver((entries) => {
@@ -124,30 +124,24 @@ const app = {
                 if (!video) return;
 
                 if (entry.isIntersecting) {
-                    // Apply global mute state
-                    video.muted = app.state.isMuted;
+                    // 1. Always ensure muted first for browser policy
+                    video.muted = true;
 
-                    // Try to play
+                    // 2. Play
                     const playPromise = video.play();
                     if (playPromise !== undefined) {
-                        playPromise.catch(error => {
-                            console.warn("Autoplay blocked, falling back to muted:", error);
-                            video.muted = true;
-                            app.state.isMuted = true;
-
-                            // Update icon to show it's muted
-                            const btn = document.getElementById('global-sound-toggle');
-                            if (btn) {
-                                const icon = btn.querySelector('i');
-                                if (icon) icon.className = 'fas fa-volume-mute';
+                        playPromise.then(() => {
+                            // 3. If Global State says UNMUTED, try to unmute
+                            if (!app.state.isMuted) {
+                                video.muted = false;
                             }
-
-                            video.play();
+                        }).catch(error => {
+                            console.warn("Autoplay blocked/failed:", error);
                         });
                     }
                 } else {
                     video.pause();
-                    video.currentTime = 0; // Optional reset
+                    video.currentTime = 0;
                 }
             });
         }, options);
@@ -287,10 +281,8 @@ const app = {
 
         if (screenId === 'home') {
             container.classList.add('reels-mode');
-            // ... (rest of reels logic)
-            const reelsContainer = document.getElementById('reels-container');
-            if (reelsContainer) reelsContainer.style.opacity = '0';
-            setTimeout(() => app.setupInfiniteScroll(), 50);
+            // Use requestAnimationFrame for smoother entry without "flash"
+            requestAnimationFrame(() => app.setupInfiniteScroll());
         } else if (screenId === 'chat') {
             container.classList.add('chat-mode');
         } else if (screenId === 'upload') {
@@ -393,7 +385,7 @@ const app = {
 
                 el.innerHTML = `
                     <!-- 1. The Video (Background) -->
-                    <video class="reel-video" src="${dataReel.videoSrc || ''}" loop playsinline autoplay></video>
+                    <video class="reel-video" src="${dataReel.videoSrc || ''}" loop playsinline autoplay muted></video>
                     
                     <!-- 2. Overlay Gradient -->
                     <div class="reel-overlay-gradient"></div>
@@ -460,11 +452,10 @@ const app = {
             container.style.scrollSnapType = 'none';
             container.scrollTop = setHeight * 2; // Jump to Set 2
 
-            // Show container after jump is set
+            // Restore Snap immediately
             requestAnimationFrame(() => {
                 container.style.scrollSnapType = '';
-                container.style.opacity = '1'; // Show it now
-                container.style.transition = 'opacity 0.2s ease-out';
+                // No opacity transition needed - should be instant
             });
         } else {
             // In case we resize or recall, ensure visible

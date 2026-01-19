@@ -124,7 +124,8 @@ ul {
     display: flex;
     justify-content: space-around;
     align-items: center;
-    height: 50px;
+    height: 80px;
+    /* Increased to lift icons */
     background: var(--bg-white);
     border-top: 1px solid var(--border-color);
     /* Flex Item Logic */
@@ -132,8 +133,13 @@ ul {
     flex-shrink: 0;
     position: relative;
     z-index: 99;
-    padding-bottom: env(safe-area-inset-bottom);
-    /* No fixed/transform needed */
+    padding-bottom: calc(env(safe-area-inset-bottom) + 20px);
+    /* Significant lift */
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
+    /* Subtle shadow for depth */
+    border-top-left-radius: 20px;
+    /* Rounded top corners */
+    border-top-right-radius: 20px;
 }
 
 
@@ -146,14 +152,16 @@ ul {
     height: 100%;
     color: var(--text-primary);
     transition: opacity 0.2s;
+    cursor: pointer;
 }
 
 .nav-item i {
-    font-size: 1.5rem;
-    /* Smaller */
+    font-size: 1.8rem;
+    /* Increased from 1.5rem */
     color: var(--bg-white);
     /* Hollow effect via text stroke */
-    -webkit-text-stroke: 1.5px var(--text-primary);
+    -webkit-text-stroke: 1.8px var(--text-primary);
+    /* Slightly thicker stroke */
     transition: all 0.2s ease;
 }
 
@@ -163,7 +171,8 @@ ul {
     color: var(--text-primary);
     /* Filled */
     -webkit-text-stroke: 0;
-    transform: scale(1.05);
+    transform: scale(1.1);
+    /* Slightly larger scale on active */
 }
 
 /* --- Sections --- */
@@ -1605,6 +1614,7 @@ ul {
 .global-sound-toggle i {
     font-size: 1.1rem;
 }
+
 /* Chat Screen Specifics */
 #chat-screen.active {
     display: flex !important;
@@ -1613,12 +1623,13 @@ ul {
 }
 
 #chat-messages {
-    background-color: white !important; /* Force white background */
+    background-color: white !important;
+    /* Force white background */
 }
 
 /* Chat Mode: Full Screen */
-#mobile-container.chat-mode > .app-header,
-#mobile-container.chat-mode > .bottom-nav {
+#mobile-container.chat-mode>.app-header,
+#mobile-container.chat-mode>.bottom-nav {
     display: none !important;
 }
 
@@ -1644,7 +1655,7 @@ ul {
 .doc-card {
     background: white;
     border-radius: var(--radius-lg);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     overflow: hidden;
     transition: transform 0.2s;
     cursor: pointer;
@@ -1709,7 +1720,8 @@ ul {
     box-shadow: none;
     align-items: center;
     justify-content: center;
-    min-height: 200px; /* Match approximate height of other cards */
+    min-height: 200px;
+    /* Match approximate height of other cards */
     background: #f8f9fa;
 }
 
