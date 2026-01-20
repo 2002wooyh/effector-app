@@ -145,18 +145,8 @@
                 </div>
             </section>
 
-            <!-- DELETE CONFIRMATION MODAL -->
-            <div id="delete-modal" class="modal-overlay" style="display: none;">
-                <div class="modal-content fade-up">
-                    <div class="modal-icon"><i class="fas fa-trash-alt"></i></div>
-                    <h3>문서 삭제</h3>
-                    <p>정말로 이 문서를 삭제하시겠습니까?<br>삭제된 파일은 복구할 수 없습니다.</p>
-                    <div class="modal-actions">
-                        <button class="btn-cancel" onclick="app.closeModal()">취소</button>
-                        <button class="btn-delete" onclick="app.executeDelete()">삭제하기</button>
-                    </div>
-                </div>
-            </div>
+            <!-- DELETE CONFIRMATION MODAL REMOVED (Duplicate) -->
+
             <!-- TAB 4: QUIZ (Hidden, triggered by logic) -->
             <section id="quiz-screen" class="screen">
                 <div class="app-header" style="position: relative; justify-content: center;">
@@ -189,7 +179,7 @@
                             <div class="stat-icon"><i class="fas fa-clock"></i></div>
                             <div class="stat-info">
                                 <h3>오늘의 학습 시간</h3>
-                                <div class="stat-value">45<span>분</span> 20<span>초</span></div>
+                                <div class="stat-value" id="study-timer">45<span>분</span> 20<span>초</span></div>
                             </div>
                         </div>
 
@@ -228,7 +218,7 @@
                     </div>
 
                     <!-- 2. Progress Banner -->
-                    <div class="stat-card green-card">
+                    <div class="stat-card green-card" onclick="app.navigate('home')" style="cursor: pointer;">
                         <div class="stat-info" style="width:100%">
                             <h3>현재 학습 진도율</h3>
                             <div class="progress-bar-container">
@@ -236,13 +226,14 @@
                             </div>
                             <div class="stat-value-row">
                                 <span class="percent">82%</span>
-                                <span class="message">"이 정도면 A+는 거뜬해요! 😎"</span>
+                                <span class="message" id="progress-message">"이 정도면 A+는 거뜬해요! 😎"</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- 3. Quiz Score Banner -->
-                    <div class="stat-card orange-card" style="justify-content: space-between;">
+                    <div class="stat-card orange-card" onclick="app.openQuiz()"
+                        style="justify-content: space-between; cursor: pointer;">
                         <div style="display:flex; align-items:center; gap:20px;">
                             <div class="stat-icon"><i class="fas fa-trophy"></i></div>
                             <div class="stat-info">
@@ -251,7 +242,7 @@
                                 <p class="stat-desc">상위 5% 실력입니다.</p>
                             </div>
                         </div>
-                        <div class="action-icon-btn" onclick="app.openQuiz()">
+                        <div class="action-icon-btn">
                             <i class="fas fa-chevron-right"></i>
                         </div>
                     </div>
@@ -280,9 +271,10 @@
                 <!-- Chat Header -->
                 <div class="app-header"
                     style="flex-shrink: 0; background:white; position: sticky; top: 0; z-index: 10; justify-content: center; position: relative;">
-                    <button onclick="app.closeChat()" style="position: absolute; left: 16px;"><i
+                    <button onclick="app.closeChat()" style="position: absolute; left: 16px; font-size: 1.2rem;"><i
                             class="fas fa-chevron-left"></i></button>
-                    <div class="logo" id="chat-header-title" style="font-size: 1rem;">AI에게 질문하기</div>
+                    <div class="logo" id="chat-header-title" style="font-size: 1rem; font-style: normal;">AI에게 질문하기
+                    </div>
                 </div>
 
                 <!-- Chat Messages Area -->
@@ -370,7 +362,7 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=3"></script>
 </body>
 
 

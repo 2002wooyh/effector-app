@@ -12,7 +12,8 @@
 
     --border-color: #DBDBDB;
     /* Light Border */
-    --font-primary: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Pretendard", sans-serif;
+    --font-primary: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    /* Pretendard first */
     --nav-height: 50px;
     --header-height: 44px;
     /* Standard iOS/Insta Header */
@@ -51,7 +52,10 @@ body {
     height: 100%;
     /* Full Height */
     position: relative;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+    /* Full Height */
+    position: relative;
+    box-shadow: 0 4px 40px rgba(0, 0, 0, 0.08);
+    /* Softer, larger shadow for floating feel on desktop */
     display: flex;
     flex-direction: column;
     /* App Shell Flex */
@@ -97,7 +101,8 @@ ul {
     /* Bold Modern Font */
     font-weight: 800;
     font-style: italic;
-    letter-spacing: 1px;
+    letter-spacing: -0.5px;
+    /* Tighter letter spacing for logo */
     color: var(--text-primary);
     /* transform removed */
 }
@@ -134,7 +139,7 @@ ul {
     flex-shrink: 0;
     position: relative;
     z-index: 99;
-    padding-bottom: calc(env(safe-area-inset-bottom) + 20px);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 35px);
     /* Extra space for Home Indicator */
     padding-top: 12px;
     /* Balance top spacing */
@@ -336,8 +341,13 @@ ul {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     color: var(--text-primary);
+    transition: transform 0.1s;
+}
+
+.action-icon:active {
+    transform: scale(0.95);
 }
 
 /* Reels (Home) Specifics */
@@ -573,11 +583,11 @@ ul {
 
 /* Chat Styling Polish */
 .chat-message.received div {
-    background: #efefef !important;
-    /* Proper gray */
+    background: transparent !important;
+    /* Text Only */
     color: #000 !important;
-    border-radius: 18px;
-    padding: 10px 14px !important;
+    padding: 0 !important;
+    border-radius: 0;
 }
 
 .chat-message.sent div {
@@ -1406,6 +1416,25 @@ ul {
 .green-card .stat-icon {
     background: linear-gradient(135deg, #69db7c, #40c057);
     box-shadow: 0 4px 10px rgba(64, 192, 87, 0.3);
+}
+
+.stat-value-row {
+    position: relative;
+    /* Context for absolute if needed, but flex is fine */
+    overflow: hidden;
+    /* Clip the sliding text */
+}
+
+.stat-value-row .message {
+    display: inline-block;
+    transition: transform 0.5s ease, opacity 0.5s ease;
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.stat-value-row .message.hide-down {
+    transform: translateY(20px);
+    opacity: 0;
 }
 
 .orange-card .stat-icon {

@@ -81,14 +81,14 @@ const reels = [
 
 const quizQuestions = [
     {
-        q: "로봇의 3원칙 중 첫 번째는 무엇일까요?",
-        options: ["로봇은 인간을 해쳐선 안 된다", "로봇은 명령에 복종해야 한다", "로봇은 스스로를 보호해야 한다"],
-        answer: 0
+        q: "가상 공간을 넘어, 실제 물리적 세계와 상호작용하는 차세대 AI는?",
+        options: ["생성형 AI", "피지컬 AI", "메타버스", "블록체인"],
+        answer: 1
     },
     {
-        q: "화성 탐사선이 화성에 착륙할 때 사용하는 방식이 아닌 것은?",
-        options: ["에어백", "스카이크레인", "낙하산", "텔레포트"],
-        answer: 3
+        q: "대한민국이 독자 개발에 성공한 한국형 우주 발사체(KSLV-II)의 이름은?",
+        options: ["나로호", "다누리", "누리호", "우리별 1호"],
+        answer: 2
     },
     {
         q: "기준 금리가 오르면 일반적으로 주가는 어떻게 될까요?",
@@ -107,6 +107,13 @@ const app = {
         savedReels: new Set(), // Store IDs of saved reels
         quizScore: 0,
         currentQuestion: 0
+    },
+
+    /* --- VISUAL DEBUGGER --- */
+    /* --- VISUAL DEBUGGER (DISABLED FOR PRODUCTION) --- */
+    log: (msg) => {
+        // console.log(msg); // Optional: Keep console logs for dev, or comment out for production.
+        // Visual overlay disabled for release.
     },
 
     /* --- Video Observer (Autoplay/Pause) --- */
@@ -148,6 +155,7 @@ const app = {
     },
 
     init: async () => {
+        app.log("App Init Started");
         // Initial State
         app.state = {
             currentTab: 'home',
@@ -171,15 +179,13 @@ const app = {
         app.bottomNavItems = document.querySelectorAll('.nav-item');
         app.screens = document.querySelectorAll('.screen');
 
-        app.bottomNavItems.forEach(item => {
-            item.addEventListener('click', (e) => {
-                const target = item.getAttribute('data-target');
-                if (target) app.navigate(target);
-            });
-        });
-
         // Load content
         app.createObserver(); // Initialize observer
+
+        // Initialize Study Timer
+        // 45 min 20 sec = 2720 sec
+        app.state.studySeconds = 2720;
+        app.startStudyTimer();
 
         // Start at Home (Tab 1: Status/Dashboard) IMMEDIATELY
         app.navigate('status');
@@ -192,6 +198,8 @@ const app = {
         app.discoverNewVideos().then(() => {
             app.renderReels(); // Re-render if new videos found
         });
+
+        app.log("App Init Completed");
     },
 
     /* --- Auto Discovery Logic --- */
@@ -252,6 +260,7 @@ const app = {
     },
 
     navigate: (screenId) => {
+        app.log(`Navigate called: ${screenId}`);
         // Track History for Chat
         if (screenId === 'chat') {
             const currentActive = document.querySelector('.screen.active');
@@ -265,11 +274,26 @@ const app = {
         // 1. Show Screen
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         const target = document.getElementById(screenId + '-screen');
-        if (target) target.classList.add('active');
+        if (target) {
+            target.classList.add('active');
+            app.log(`Screen activated: #${screenId}-screen`);
+        } else {
+            app.log(`Target screen NOT FOUND: #${screenId}-screen`);
+        }
 
-        // Animation Trigger
+        // Animation Trigger Logic
         if (screenId === 'status') {
             app.playGreetingAnimation();
+        }
+
+        if (screenId === 'stats') {
+            app.log("Screen IS stats -> Triggering startMessageRotation");
+            app.startMessageRotation();
+        } else {
+            // Only stop if we are NOT in stats
+            // Wait, if I navigate to 'home', I should stop stats rotation
+            app.log("Screen NOT stats -> Stopping rotation");
+            app.stopMessageRotation();
         }
 
         // 2. Reels Mode & Chat Mode Check
@@ -281,8 +305,13 @@ const app = {
 
         if (screenId === 'home') {
             container.classList.add('reels-mode');
-            // Use requestAnimationFrame for smoother entry without "flash"
-            requestAnimationFrame(() => app.setupInfiniteScroll());
+
+            // Critical Fix: Double RAF to ensure layout is fully painted before calculating heights
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    app.setupInfiniteScroll();
+                });
+            });
         } else if (screenId === 'chat') {
             container.classList.add('chat-mode');
         } else if (screenId === 'upload') {
@@ -361,6 +390,77 @@ const app = {
         app.typingTimeouts.push(setTimeout(typeLine1, 300));
     },
 
+    /* --- Study Timer Logic --- */
+    startStudyTimer: () => {
+        if (app.state.studyTimerInterval) clearInterval(app.state.studyTimerInterval);
+
+        app.state.studyTimerInterval = setInterval(() => {
+            app.state.studySeconds++;
+
+            const timerEl = document.getElementById('study-timer');
+            if (timerEl) {
+                const total = app.state.studySeconds;
+                const min = Math.floor(total / 60);
+                const sec = total % 60;
+
+                timerEl.innerHTML = `${min}<span>분</span> ${sec}<span>초</span>`;
+            }
+        }, 1000);
+    },
+
+    /* --- Message Rotation Logic --- */
+    startMessageRotation: () => {
+        app.stopMessageRotation(); // Guarantee cleanup first
+        app.log("startMessageRotation: Called");
+
+        const messages = [
+            "\"이 정도면 A+는 거뜬해요! 😎\"",
+            "\"퀴즈 풀기로 학습 진도율을 올려보세요!\""
+        ];
+        let index = 0;
+
+        // Start Interval
+        app.state.messageRotationInterval = setInterval(() => {
+            const msgEl = document.getElementById('progress-message');
+            // Safety check: if element is gone (e.g. removed from DOM), stop.
+            if (!msgEl) {
+                app.log("Interval Tick: msgEl missing! Stopping.");
+                app.stopMessageRotation();
+                return;
+            }
+
+            app.log(`Interval Tick: Rotated to index ${(index + 1) % messages.length}`);
+
+            // Force reflow to ensure restart of animation if needed
+            void msgEl.offsetWidth;
+
+            // 1. Slide Down (Disappear)
+            msgEl.classList.add('hide-down');
+
+            // 2. Change Text & Slide Up (Appear)
+            setTimeout(() => {
+                // Double check existence inside timeout
+                if (!msgEl) return;
+
+                index = (index + 1) % messages.length;
+                msgEl.innerText = messages[index];
+                msgEl.classList.remove('hide-down');
+            }, 500); // 500ms matches CSS transition
+        }, 5000);
+
+        app.log(`Timer Started: ${app.state.messageRotationInterval}`);
+    },
+
+    stopMessageRotation: () => {
+        if (app.state.messageRotationInterval) {
+            app.log(`stopMessageRotation: Clearing timer ${app.state.messageRotationInterval}`);
+            clearInterval(app.state.messageRotationInterval);
+            app.state.messageRotationInterval = null;
+        } else {
+            // app.log("stopMessageRotation: No timer to clear");
+        }
+    },
+
     /* --- Reels Logic --- */
     renderReels: () => {
         const container = document.getElementById('reels-container');
@@ -437,24 +537,22 @@ const app = {
         const reelCount = app.state.reels.length;
         if (reelCount === 0) return;
 
-        // Total Height of ONE set
-        const totalScrollHeight = container.scrollHeight;
+        const currentLoopCount = 5; // Hardcoded matches render loop
 
-        // Dynamic set height calculation
-        const currentLoopCount = Math.round(container.children.length / reelCount);
-        if (currentLoopCount === 0) return;
-
-        const setHeight = totalScrollHeight / currentLoopCount;
+        // Critical Fix: Use clientHeight instead of scrollHeight ratio for robustness
+        const setHeight = container.clientHeight * reelCount;
 
         // Initial Jump if near top
         if (container.scrollTop < 100) {
-            // Temporarily disable snap to force instant jump
+            // Temporarily disable snap AND smooth scroll to force instant jump
             container.style.scrollSnapType = 'none';
-            container.scrollTop = setHeight * 2; // Jump to Set 2
+            container.style.scrollBehavior = 'auto';
+            container.scrollTop = setHeight * 2; // Jump to Set 2 (Middle)
 
-            // Restore Snap immediately
+            // Restore Snap & Scroll Behavior immediately
             requestAnimationFrame(() => {
                 container.style.scrollSnapType = '';
+                container.style.scrollBehavior = '';
                 // No opacity transition needed - should be instant
             });
         } else {
@@ -620,9 +718,20 @@ const app = {
         // Reset animations (set to 0)
         const progressBars = document.querySelectorAll('.progress-bar-fill');
         const graphBars = document.querySelectorAll('.graph-bar');
+        const percentEl = document.querySelector('.percent');
 
         progressBars.forEach(b => b.style.width = '0%');
         graphBars.forEach(b => b.style.height = '0%');
+
+        // Reset Number
+        if (percentEl) {
+            // Save target if not already saved
+            if (!percentEl.dataset.target) {
+                const numeric = parseInt(percentEl.innerText.replace(/\D/g, '')) || 0;
+                percentEl.dataset.target = numeric;
+            }
+            percentEl.innerText = "0%";
+        }
 
         // Trigger animations (set to target) after slight delay for screen transition
         setTimeout(() => {
@@ -635,7 +744,28 @@ const app = {
                     if (b.dataset.height) b.style.height = b.dataset.height;
                 }, idx * 50);
             });
+
+            // Animate Number
+            if (percentEl && percentEl.dataset.target) {
+                app.animateValue(percentEl, 0, parseInt(percentEl.dataset.target), 1000);
+            }
         }, 300); // 300ms matches start of card fade-up
+    },
+
+    animateValue: (obj, start, end, duration) => {
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            // Ease-out effect: 1 - Math.pow(1 - progress, 3)
+            const easeProgress = 1 - Math.pow(1 - progress, 3);
+
+            obj.innerText = Math.floor(easeProgress * (end - start) + start) + "%";
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            }
+        };
+        window.requestAnimationFrame(step);
     },
 
     openNotifications: () => {
